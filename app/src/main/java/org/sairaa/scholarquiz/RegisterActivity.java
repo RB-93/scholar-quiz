@@ -2,20 +2,13 @@ package org.sairaa.scholarquiz;
 
 import android.app.AlertDialog;
 import android.content.DialogInterface;
-import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
+import android.os.Bundle;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
 
-import org.json.JSONException;
-import org.json.JSONObject;
-import org.sairaa.scholarquiz.Other.ActivityConstants;
-import org.sairaa.scholarquiz.Other.GeneralActions;
-
-import java.util.ArrayList;
-
-public class RegisterActivity extends AppCompatActivity implements View.OnClickListener,BackgroundLoginTask.AsyncData {
+public class RegisterActivity extends AppCompatActivity implements View.OnClickListener {
 
     private EditText name,emailId,slackId,password,conPasword,info;
     private Button registerB;
@@ -43,11 +36,21 @@ public class RegisterActivity extends AppCompatActivity implements View.OnClickL
         switch (view.getId()){
             case R.id.register_reg:
                 // Check all requir field empty or not
-                if(name.getText().toString().equals("")
-                        || emailId.getText().toString().equals("")
-                        || slackId.getText().toString().equals("")
-                        || password.getText().toString().equals("")
-                        || conPasword.getText().toString().equals("")) {
+                //Apply the validation in each field including slack Id
+                if(name.getText().toString().length()==0) {
+                    name.setError("Name cannot be blank");
+                }
+                if(emailId.getText().toString().equals("")) {
+                    emailId.setError("Email cannot be blank");
+                }
+                if(!slackId.getText().toString().contains("@")) {
+                    slackId.setError("@ is essential");
+                }
+                if (password.getText().toString().equals("")) {
+                    password.setError("password cannot be blank");
+                }
+                if(conPasword.getText().toString().equals("")) {
+                    conPasword.setError("confirm password cannot be blank");
                     // if any of the required field empty "Show Dialog to fill the required field
                     alertBuilder = new AlertDialog.Builder(RegisterActivity.this);
                     alertBuilder.setTitle("Something Wrong");
@@ -77,54 +80,14 @@ public class RegisterActivity extends AppCompatActivity implements View.OnClickL
                     alertDialog.show();
                 }else{
                     // Background task to insert user information into database
-//                    BackgroundLoginTask backgroundLoginTask = new BackgroundLoginTask(RegisterActivity.this);
-//                    backgroundLoginTask.execute("register",name.getText().toString(),
-//                                                emailId.getText().toString(),
-//                                                slackId.getText().toString(),
-//                                                password.getText().toString(),
-//                                                info.getText().toString());
-
-                    ActivityConstants.URLInfo urlInfo = ActivityConstants.getURLInfoCopy(ActivityConstants.urlList.get(1)); // for login
-                    ArrayList<ActivityConstants.ServiceCallObj> parameters = new ArrayList<>();
-                    parameters.add(new ActivityConstants.ServiceCallObj("user_name",name.getText().toString()));
-                    parameters.add(new ActivityConstants.ServiceCallObj("mail_id",emailId.getText().toString()));
-                    parameters.add(new ActivityConstants.ServiceCallObj("slack_id",slackId.getText().toString()));
-                    parameters.add(new ActivityConstants.ServiceCallObj("info",info.getText().toString()));
-                    BackgroundLoginTask request = new BackgroundLoginTask(this,urlInfo,parameters);
-                    ActivityConstants.callDataRequest(request);
+                    BackgroundLoginTask backgroundLoginTask = new BackgroundLoginTask(RegisterActivity.this);
+                    backgroundLoginTask.execute("register",name.getText().toString(),
+                            emailId.getText().toString(),
+                            slackId.getText().toString(),
+                            password.getText().toString(),
+                            info.getText().toString());
                 }
                 break;
         }
-    }
-
-    @Override
-    public void onDataReceive(JSONObject jsonObject) {
-        String code = null;
-        try {
-            code = jsonObject.getString("code");
-            String message = jsonObject.getString("message");
-
-            if(code.equals("reg_true")){
-                GeneralActions.showDialog(this,"Registration Successfull", message, "OK", new ActivityConstants.SuccessCallBacks() {
-                    @Override
-                    public void onSuccess() {}
-
-                    @Override
-                    public void onError() {}
-                });
-
-            }else if(code.equals("reg_false")){
-                GeneralActions.showDialog(this,"Registration Failed", message, "OK", new ActivityConstants.SuccessCallBacks() {
-                    @Override
-                    public void onSuccess() {}
-
-                    @Override
-                    public void onError() {}
-                });
-            }
-        } catch (JSONException e) {
-            e.printStackTrace();
-        }
-
     }
 }
